@@ -65,8 +65,15 @@ export function ffmpeg() {
   throw new Error('ffmpeg not found. Install ffmpeg, or run `npm run setup` to get a bundled copy.');
 }
 
+// Python: PYTHON env var, then the engine's own virtualenv (made by setup), then the system python.
+export const VENV = path.join(HOME, 'venv');
+export function venvPython() {
+  return path.join(VENV, process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
+}
 export function python() {
-  return process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
+  if (process.env.PYTHON) return process.env.PYTHON;
+  if (fs.existsSync(venvPython())) return venvPython();
+  return process.platform === 'win32' ? 'python' : 'python3';
 }
 
 export function log(...a) {

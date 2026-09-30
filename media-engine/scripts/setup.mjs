@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { ROOT, HOME, parseArgs, ffmpeg, python, launchBrowser } from './lib.mjs';
+import { ROOT, HOME, VENV, parseArgs, ffmpeg, python, venvPython, launchBrowser } from './lib.mjs';
 
 const args = parseArgs();
 const models = path.join(HOME, 'models');
@@ -52,8 +52,13 @@ if (args['elevenlabs-key']) {
 if (!args.check && !args['elevenlabs-key']) {
   if (!fs.existsSync(path.join(ROOT, 'node_modules', 'playwright'))) run('npm', ['install', '--no-audit', '--no-fund']);
   if (!process.env.SVM_CHROMIUM) run('npx', ['playwright', 'install', 'chromium']);
-  run(python(), ['-m', 'pip', 'install', '--quiet', '--user', 'kokoro-onnx', 'soundfile', 'imageio-ffmpeg']) ||
-    run(python(), ['-m', 'pip', 'install', '--quiet', 'kokoro-onnx', 'soundfile', 'imageio-ffmpeg']);
+  // A private virtualenv: Homebrew's Python refuses system-wide pip installs (PEP 668).
+  if (!process.env.PYTHON && !fs.existsSync(venvPython())) {
+    const sys = process.platform === 'win32' ? 'python' : 'python3';
+    run(sys, ['-m', 'venv', VENV]);
+  }
+  run(python(), ['-m', 'pip', 'install', '--quiet', '--upgrade', 'pip']);
+  run(python(), ['-m', 'pip', 'install', '--quiet', 'kokoro-onnx', 'soundfile', 'imageio-ffmpeg']);
   fs.mkdirSync(models, { recursive: true });
   for (const [name, url] of Object.entries(FILES)) {
     const file = path.join(models, name);
