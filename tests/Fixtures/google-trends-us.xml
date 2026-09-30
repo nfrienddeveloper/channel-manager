@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:ht="https://trends.google.com/trending/rss" version="2.0">
+<channel>
+<title>Daily Search Trends</title>
+<item>
+	<title>d'angelo russell</title>
+	<ht:approx_traffic>2000+</ht:approx_traffic>
+	<description/>
+	<link>https://trends.google.com/trending/rss?geo=US</link>
+	<pubDate>Wed, 30 Sep 2026 08:20:00 -0700</pubDate>
+	<ht:picture>https://encrypted-tbn1.gstatic.com/images?q=tbn:example1</ht:picture>
+	<ht:picture_source>Bleacher Report</ht:picture_source>
+	<ht:news_item>
+		<ht:news_item_title>D&apos;Angelo Russell Lands Contract in Chinese Basketball Association After Grizzlies Release</ht:news_item_title>
+		<ht:news_item_snippet/>
+		<ht:news_item_url>https://bleacherreport.com/articles/25504981-dangelo-russell-lands-contract-chinese-basketball-association-after-grizzlies-release</ht:news_item_url>
+		<ht:news_item_picture>https://encrypted-tbn1.gstatic.com/images?q=tbn:example1</ht:news_item_picture>
+		<ht:news_item_source>Bleacher Report</ht:news_item_source>
+	</ht:news_item>
+	<ht:news_item>
+		<ht:news_item_title>D&apos;Angelo Russell Reportedly Joining Shanghai Sharks</ht:news_item_title>
+		<ht:news_item_snippet/>
+		<ht:news_item_url>https://www.hoopsrumors.com/2026/09/dangelo-russell-reportedly-joining-shanghai-sharks.html</ht:news_item_url>
+		<ht:news_item_picture>https://encrypted-tbn1.gstatic.com/images?q=tbn:example2</ht:news_item_picture>
+		<ht:news_item_source>Hoops Rumors</ht:news_item_source>
+	</ht:news_item>
+</item>
+<item>
+	<title>manassas shooting</title>
+	<ht:approx_traffic>500+</ht:approx_traffic>
+	<description/>
+	<link>https://trends.google.com/trending/rss?geo=US</link>
+	<pubDate>Wed, 30 Sep 2026 07:20:00 -0700</pubDate>
+	<ht:news_item>
+		<ht:news_item_title>Manhunt underway for suspect who shot 3 coworkers in Manassas, police say</ht:news_item_title>
+		<ht:news_item_snippet/>
+		<ht:news_item_url>https://www.nbcwashington.com/news/local/northern-virginia/manhunt-underway/4161246/</ht:news_item_url>
+		<ht:news_item_source>NBC4 Washington</ht:news_item_source>
+	</ht:news_item>
+</item>
+<item>
+	<title>strait of hormuz news</title>
+	<ht:approx_traffic>10000+</ht:approx_traffic>
+	<description/>
+	<link>https://trends.google.com/trending/rss?geo=US</link>
+	<pubDate>Wed, 30 Sep 2026 06:20:00 -0700</pubDate>
+	<ht:news_item>
+		<ht:news_item_title>Iran war live: US response to proposal under review after Qatar mediation</ht:news_item_title>
+		<ht:news_item_snippet/>
+		<ht:news_item_url>https://www.aljazeera.com/news/liveblog/2026/9/30/iran-war-live</ht:news_item_url>
+		<ht:news_item_source>Al Jazeera</ht:news_item_source>
+	</ht:news_item>
+</item>
+<item>
+	<title>zach braff</title>
+	<ht:approx_traffic>500+</ht:approx_traffic>
+	<description/>
+	<link>https://trends.google.com/trending/rss?geo=US</link>
+	<pubDate>Wed, 30 Sep 2026 05:20:00 -0700</pubDate>
+	<ht:news_item>
+		<ht:news_item_title>&apos;Scrubs&apos; Zach Braff Gives Discouraging Ken Jenkins Return Update</ht:news_item_title>
+		<ht:news_item_snippet/>
+		<ht:news_item_url>https://deadline.com/2026/09/scrubs-ken-jenkins-return-zach-braff-dr-cox-turk-season-2-1237062675/</ht:news_item_url>
+		<ht:news_item_source>Deadline</ht:news_item_source>
+	</ht:news_item>
+	<ht:news_item>
+		<ht:news_item_title>How to Watch Season 2 of the &apos;Scrubs&apos; Reboot</ht:news_item_title>
+		<ht:news_item_snippet/>
+		<ht:news_item_url>https://www.cnet.com/tech/services-and-software/how-to-watch-season-2-of-the-scrubs-reboot/</ht:news_item_url>
+		<ht:news_item_source>CNET</ht:news_item_source>
+	</ht:news_item>
+</item>
+</channel>
+</rss>

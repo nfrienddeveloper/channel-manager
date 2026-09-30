@@ -1,0 +1,14 @@
+{
+  "name": "channel-manager-media-engine",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Video renderer and voiceover used by Channel Manager. Copied from nfrienddeveloper/social-video-maker (elevenlabs-voice branch, faaa45a).",
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "check": "node scripts/setup.mjs --check"
+  },
+  "dependencies": {
+    "playwright": "^1.55.0"
+  }
+}

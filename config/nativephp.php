@@ -15,7 +15,7 @@ return [
      * usually in the form of a reverse domain name.
      * For example: com.nativephp.app
      */
-    'app_id' => env('NATIVEPHP_APP_ID', 'com.nativephp.app'),
+    'app_id' => env('NATIVEPHP_APP_ID', 'com.channelmanager.app'),
 
     /**
      * If your application allows deep linking, you can specify the scheme
@@ -41,12 +41,12 @@ return [
     /**
      * The description of your application.
      */
-    'description' => env('NATIVEPHP_APP_DESCRIPTION', 'An awesome app built with NativePHP'),
+    'description' => env('NATIVEPHP_APP_DESCRIPTION', 'Plans, produces and runs social video channels on autopilot'),
 
     /**
      * The Website of your application.
      */
-    'website' => env('NATIVEPHP_APP_WEBSITE', 'https://nativephp.com'),
+    'website' => env('NATIVEPHP_APP_WEBSITE', 'https://github.com/nfrienddeveloper/channel-manager'),
 
     /**
      * The default service provider for your application. This provider
@@ -155,9 +155,16 @@ return [
     'queue_workers' => [
         'default' => [
             'queues' => ['default'],
-            'memory_limit' => 128,
-            'timeout' => 60,
+            'memory_limit' => 256,
+            'timeout' => 900,
             'sleep' => 3,
+        ],
+        // Research, script writing and video rendering: slow, one at a time.
+        'media' => [
+            'queues' => ['media'],
+            'memory_limit' => 512,
+            'timeout' => 1800,
+            'sleep' => 5,
         ],
     ],
 
