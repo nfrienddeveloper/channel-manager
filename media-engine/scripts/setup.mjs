@@ -31,7 +31,12 @@ async function promptHidden(question) {
 
 async function elevenlabsStatus(key) {
   const res = await fetch('https://api.elevenlabs.io/v1/user/subscription', { headers: { 'xi-api-key': key } });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    const body = await res.text();
+    // A key limited to Text to Speech can't read the plan, but it still voices videos.
+    if (res.status === 401 && /missing_permissions|user_read/.test(body)) return 'key limited to Text to Speech (credit balance hidden)';
+    throw new Error(`HTTP ${res.status}`);
+  }
   const s = await res.json();
   return `${s.tier} plan, ${(s.character_limit - s.character_count).toLocaleString()} of ${s.character_limit.toLocaleString()} credits left`;
 }

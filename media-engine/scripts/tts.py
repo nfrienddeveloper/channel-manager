@@ -36,7 +36,7 @@ EL_API = os.environ.get("ELEVENLABS_API_URL", "https://api.elevenlabs.io")
 EL_DEFAULT_VOICE = "EXAVITQu4vr4xnSDxMaL"  # "Sarah", a premade ElevenLabs voice
 EL_DEFAULT_MODEL = "eleven_multilingual_v2"
 # Premade voices by name, so keys without Voices read access can still pick one.
-EL_PREMADE = {"sarah": "EXAVITQu4vr4xnSDxMaL", "rachel": "21m00Tcm4TlvDq8ikWAM", "adam": "pNInz6obpgDQGcFmAJgB",
+EL_PREMADE = {"sarah": "EXAVITQu4vr4xnSDxMaL", "rachel": "21m00Tcm4TlvDq8ikWAM", "adam": "pNInz6obpgDQGcFmaJgB",
               "george": "JBFqnCBsd6RMkjVDRZzb", "charlotte": "XB0fDUnXU5powFXDhCwa", "brian": "nPczCjzI2devNBz1zQrb",
               "alice": "Xb7hH8MSUJpSbSDYk0k2", "daniel": "onwK4e9ZLuTAKqWW03F9", "lily": "pFZP5JQG7iQjIQuC4Bku"}
 TAG = re.compile(r"\[[^\]]*\]")          # ElevenLabs v3 audio tags, e.g. [excited], [whispers]
