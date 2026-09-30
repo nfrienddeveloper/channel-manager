@@ -17,7 +17,8 @@ class ScriptPrompt
         $brand = $channel->setting('brand');
         $avoid = collect($channel->setting('avoid', []))->map(fn ($c) => "- {$c}: ".(SafetyFilter::CATEGORIES[$c] ?? $c))->implode("\n");
         $maxSeconds = (int) $channel->setting('max_seconds', 35);
-        $maxWords = (int) round($maxSeconds * 2.5);
+        // The voice plus the pauses between scenes runs about 1.8 spoken words per second.
+        $maxWords = (int) round($maxSeconds * 1.8);
         $elevenlabs = in_array($channel->setting('voice.engine'), ['auto', 'elevenlabs'], true);
 
         $notes = collect($research['notes'] ?? [])->map(function ($n, $i) {
@@ -64,7 +65,7 @@ If you make it, write {$maxSeconds} seconds or less (at most {$maxWords} spoken 
    - "quote": a real quote from the research, "text" (up to 110 chars) and "author"
    - "hook" can also be used mid-video as a bold text card: "text", optional "kicker", optional "image"
 3. "cta" last: "vo" only (the on-screen follow button is added for you), for example inviting people to follow for tomorrow's trends or to comment their take.
-Every scene has "vo": the words spoken over it, natural and conversational, written to be heard, not read. The on-screen text should not simply repeat the voiceover.
+Every scene has "vo": the words spoken over it, natural and conversational, written to be heard, not read. Keep each scene's "vo" to one short sentence (about 8 to 14 words) so the video keeps moving; add a scene rather than lengthen one. The on-screen text should not simply repeat the voiceover.
 {$tags}
 
 Then write the Facebook caption: 1 to 3 short sentences that add context and end with a question that invites comments, no hashtags in it,
