@@ -27,6 +27,7 @@ class UnearthedThemeTest extends TestCase
                 ['type' => 'keyline', 'text' => 'House of David', 'translit' => 'b·y·t·d·w·d', 'vo' => 'One line reads, House of David.'],
                 ['type' => 'artifact', 'title' => 'Tel Dan Stele', 'image' => 'img1', 'ref' => '2 Kings 9', 'vo' => 'An Aramean king carved it.',
                     'rows' => [['label' => 'Date', 'value' => 'c. 840 BC'], ['label' => 'Found', 'value' => '1993, Tel Dan'], ['label' => '', 'value' => 'dropped']]],
+                ['type' => 'stat', 'value' => '130', 'label' => 'years after *David*', 'vo' => 'About a hundred and thirty years after David.'],
                 ['type' => 'cta', 'vo' => 'Follow for the next find.'],
             ],
             'caption' => 'A stone from 840 BC names the House of David. Did you know?',
@@ -49,12 +50,12 @@ class UnearthedThemeTest extends TestCase
 
         $sb = app(ScriptBuilder::class)->build($item, $this->script(), $this->research)['storyboard'];
 
-        $this->assertSame(['hook', 'keyline', 'artifact', 'cta'], array_column($sb['scenes'], 'type'));
+        $this->assertSame(['hook', 'keyline', 'artifact', 'stat', 'cta'], array_column($sb['scenes'], 'type'));
         $this->assertSame('A stone that names *King David*', $sb['scenes'][0]['text']);
         $this->assertSame([['label' => 'Date', 'value' => 'c. 840 BC'], ['label' => 'Found', 'value' => '1993, Tel Dan']], $sb['scenes'][2]['rows']);
         $this->assertSame('assets/stele.jpg', $sb['scenes'][2]['image']);
         $this->assertSame(2, $sb['episode'], 'only videos actually made count toward the number');
-        $this->assertSame('A new find, every day', $sb['scenes'][3]['text']);
+        $this->assertSame('A new find, every day', $sb['scenes'][4]['text']);
     }
 
     public function test_the_classic_look_drops_scenes_it_cannot_draw_and_strips_emphasis(): void
@@ -63,8 +64,9 @@ class UnearthedThemeTest extends TestCase
 
         $sb = app(ScriptBuilder::class)->build($item, $this->script(), $this->research)['storyboard'];
 
-        $this->assertSame(['hook', 'cta'], array_column($sb['scenes'], 'type'));
+        $this->assertSame(['hook', 'stat', 'cta'], array_column($sb['scenes'], 'type'));
         $this->assertSame('A stone that names King David', $sb['scenes'][0]['text']);
+        $this->assertSame('years after David', $sb['scenes'][1]['label']);
         $this->assertArrayNotHasKey('episode', $sb);
     }
 
