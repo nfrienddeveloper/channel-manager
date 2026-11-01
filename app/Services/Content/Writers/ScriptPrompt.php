@@ -28,6 +28,7 @@ class ScriptPrompt
         })->implode("\n\n");
         $images = collect($research['images'] ?? [])->map(fn ($img) => "- {$img['id']}: {$img['description']}")->implode("\n") ?: '(none: use scene types that need no image)';
         $learnings = $item->channel->learningsSummary();
+        $themeScenes = self::themeScenes($channel->setting('brand.theme', 'default'));
 
         $tags = $elevenlabs ? <<<'TXT'
 The voice is ElevenLabs v3. You may put one audio tag in square brackets right before the words it colours, where the mood shifts:
@@ -64,7 +65,7 @@ If you make it, write {$maxSeconds} seconds or less (at most {$maxWords} spoken 
    - "list": "title" and 2 to 4 short "items" (up to 24 chars each)
    - "quote": a real quote from the research, "text" (up to 110 chars) and "author"
    - "hook" can also be used mid-video as a bold text card: "text", optional "kicker", optional "image"
-3. "cta" last: "vo" only (the on-screen follow button is added for you), for example inviting people to follow for tomorrow's trends or to comment their take.
+{$themeScenes}3. "cta" last: "vo" only (the on-screen follow button is added for you), for example inviting people to follow for tomorrow's trends or to comment their take.
 Every scene has "vo": the words spoken over it, natural and conversational, written to be heard, not read. Keep each scene's "vo" to one short sentence (about 8 to 14 words) so the video keeps moving; add a scene rather than lengthen one. The on-screen text should not simply repeat the voiceover.
 {$tags}
 
@@ -73,6 +74,24 @@ plus up to 3 relevant hashtags (without #). List the research URLs you actually 
 
 Return JSON only, matching the schema.
 PROMPT;
+    }
+
+    /** Extra scene types and styling notes for themes that have them. */
+    private static function themeScenes(string $theme): string
+    {
+        return match ($theme) {
+            'unearthed' => <<<'TXT'
+   - "artifact": a museum placard for one object: "title" (its name, up to 40 chars), "rows": 2 to 4 facts as {"label", "value"}
+     (label up to 14 chars, like "Date", "Found", "Language", "Held at"; value up to 34 chars), optional "ref" (a Bible passage it relates to,
+     like "2 Kings 9"; only when the research makes that link), optional "image"
+   - "keyline": the one line that matters, enlarged: "text" is its English meaning (up to 40 chars), optional "translit" (the transliteration,
+     like "b·y·t·d·w·d"), optional "script" (the original letters in Unicode, only if the research gives them exactly), optional "kicker"
+   Put *asterisks* around the two or three payoff words of a headline (for example "A stone that names *King David*"); they are shown in gold italics.
+   Never put asterisks in "vo".
+
+TXT,
+            default => '',
+        };
     }
 
     public static function schema(): array
@@ -89,9 +108,11 @@ PROMPT;
                 'scenes' => ['type' => 'array', 'items' => [
                     'type' => 'object',
                     'properties' => [
-                        'type' => ['type' => 'string', 'enum' => ['hook', 'image', 'split', 'stat', 'list', 'quote', 'cta']],
+                        'type' => ['type' => 'string', 'enum' => ['hook', 'image', 'split', 'stat', 'list', 'quote', 'artifact', 'keyline', 'cta']],
                         'text' => $str, 'kicker' => $str, 'sub' => $str, 'image' => $str, 'value' => $str, 'label' => $str,
                         'title' => $str, 'items' => ['type' => 'array', 'items' => $str], 'author' => $str, 'vo' => $str,
+                        'rows' => ['type' => 'array', 'items' => ['type' => 'object', 'properties' => ['label' => $str, 'value' => $str], 'required' => ['label', 'value']]],
+                        'ref' => $str, 'script' => $str, 'translit' => $str,
                     ],
                     'required' => ['type', 'vo'],
                 ]],

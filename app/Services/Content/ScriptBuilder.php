@@ -12,7 +12,11 @@ use InvalidArgumentException;
  */
 class ScriptBuilder
 {
-    private const LIMITS = ['text' => 60, 'kicker' => 28, 'sub' => 70, 'label' => 60, 'title' => 40, 'author' => 40, 'value' => 8];
+    private const LIMITS = ['text' => 60, 'kicker' => 28, 'sub' => 70, 'label' => 60, 'title' => 40, 'author' => 40, 'value' => 8,
+        'ref' => 32, 'script' => 24, 'translit' => 40];
+
+    /** Scene types only some themes can draw. */
+    private const THEME_SCENES = ['unearthed' => ['artifact', 'keyline']];
 
     public function __construct(private SafetyFilter $safety) {}
 
@@ -43,18 +47,32 @@ class ScriptBuilder
             throw new InvalidArgumentException('Script cites none of the research sources');
         }
 
+        $theme = $channel->setting('brand.theme', 'default');
+        $extraTypes = self::THEME_SCENES[$theme] ?? [];
         $scenes = [];
         $used = [];
         foreach ($script['scenes'] ?? [] as $s) {
             $type = $s['type'] ?? null;
-            if ($type === 'cta') {
+            if ($type === 'cta' || (in_array($type, ['artifact', 'keyline'], true) && ! in_array($type, $extraTypes, true))) {
                 continue;
             }
-            $scene = array_filter(array_intersect_key($s, array_flip(['type', 'text', 'kicker', 'sub', 'value', 'label', 'title', 'items', 'author', 'vo'])), fn ($v) => $v !== '' && $v !== null);
+            $scene = array_filter(array_intersect_key($s, array_flip(['type', 'text', 'kicker', 'sub', 'value', 'label', 'title', 'items', 'author', 'vo', 'rows', 'ref', 'script', 'translit'])), fn ($v) => $v !== '' && $v !== null && $v !== []);
             foreach (self::LIMITS as $k => $max) {
                 if (isset($scene[$k])) {
-                    $scene[$k] = Str::limit(trim($scene[$k]), $max);
+                    // *Emphasis* marks the payoff words; only themes that style it keep the asterisks.
+                    $value = $extraTypes ? trim($scene[$k]) : trim(str_replace('*', '', $scene[$k]));
+                    $scene[$k] = Str::limit($value, $max);
                 }
+            }
+            if ($type === 'artifact') {
+                $scene['rows'] = collect($scene['rows'] ?? [])->filter(fn ($r) => ! empty($r['label']) && ! empty($r['value']))
+                    ->map(fn ($r) => ['label' => Str::limit(trim($r['label']), 14), 'value' => Str::limit(trim($r['value']), 34)])->take(4)->values()->all();
+                if (empty($scene['title']) || count($scene['rows']) < 2) {
+                    continue;
+                }
+            }
+            if ($type === 'keyline' && empty($scene['text'])) {
+                continue;
             }
             $image = $s['image'] ?? null;
             if ($image && $images->has($image)) {
@@ -100,6 +118,9 @@ class ScriptBuilder
             'voice' => array_filter(['engine' => $voice['engine'] ?? 'auto', 'voice' => $voice['voice'] ?? null, 'fallbackVoice' => $voice['fallback'] ?? null]),
             'scenes' => $scenes,
         ];
+        if (! empty($brand['series'])) {
+            $storyboard['episode'] = $channel->nextEpisode($item);
+        }
 
         $hashtags = collect([...($script['hashtags'] ?? []), ...$channel->setting('hashtags', [])])
             ->map(fn ($h) => '#'.preg_replace('/[^\p{L}\p{N}_]/u', '', ltrim($h, '#')))->filter(fn ($h) => strlen($h) > 1)->unique()->take(4);

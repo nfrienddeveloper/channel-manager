@@ -22,6 +22,8 @@ class VideoRenderer
         File::ensureDirectoryExists($dir.'/ads/'.$sb['id']);
         File::put($dir.'/brand.json', json_encode([
             'name' => $brand['name'],
+            'theme' => $brand['theme'] ?? 'default',
+            'series' => $brand['series'] ?? null,
             'tagline' => $brand['tagline'] ?? null,
             'colors' => $brand['colors'],
             'fonts' => $brand['fonts'],

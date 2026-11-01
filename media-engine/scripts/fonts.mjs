@@ -21,6 +21,25 @@ async function get(url, binary) {
   }
 }
 
+// Families differ in which weights and italics they have, and Google rejects a request for any it lacks,
+// so ask for the widest set first and narrow down.
+const AXES = [
+  'ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900',
+  'wght@400;500;600;700;800;900',
+  'ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700',
+  'wght@400;500;600;700',
+  null,
+];
+async function fontCss(family) {
+  let err;
+  for (const axes of AXES) {
+    try {
+      return await get(`https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}${axes ? ':' + axes : ''}&display=block`);
+    } catch (e) { err = e; }
+  }
+  throw err;
+}
+
 // Returns a <style> block with @font-face rules pointing at cached files, or '' if unavailable.
 export async function fontFaceCss(families) {
   const wanted = [...new Set(families.filter(f => f && !SYSTEM.test(f)))];
@@ -30,7 +49,7 @@ export async function fontFaceCss(families) {
     const cached = path.join(dir, 'font.css');
     if (!fs.existsSync(cached)) {
       try {
-        const src = await get(`https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@400;500;600;700;800;900&display=block`);
+        const src = await fontCss(family);
         fs.mkdirSync(dir, { recursive: true });
         let n = 0, local = src;
         for (const url of new Set(src.match(/https:\/\/fonts\.gstatic\.com\/[^)]+/g) || [])) {
