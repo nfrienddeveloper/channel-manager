@@ -77,11 +77,25 @@ class ChannelController extends Controller
             'max_seconds' => 'required|integer|min:10|max:90',
             'color_primary' => 'required|regex:/^#[0-9a-fA-F]{6}$/',
             'color_accent' => 'required|regex:/^#[0-9a-fA-F]{6}$/',
+            'theme' => 'nullable|in:'.implode(',', array_keys(Channel::THEMES)),
         ]);
         $list = fn (?string $s) => array_values(array_filter(array_map('trim', explode(',', (string) $s))));
         $times = collect($list($v['post_times']))->map(fn ($t) => sprintf('%02d:%02d', ...array_map('intval', explode(':', $t))))->sort()->values()->all();
 
         $s = $channel->settings;
+        $theme = $v['theme'] ?? $channel->setting('brand.theme', 'default');
+        if ($theme !== $channel->setting('brand.theme', 'default')) {
+            // A new look brings its own colours, fonts and words; anything typed into the form this time still wins.
+            $preset = Channel::themePreset($theme);
+            $s['brand'] = array_merge($channel->setting('brand'), $preset);
+            foreach (['tagline', 'cta'] as $k) {
+                if (isset($preset[$k]) && $v[$k] === $channel->setting("brand.{$k}")) {
+                    $v[$k] = $preset[$k];
+                }
+            }
+            $v['color_primary'] = $preset['colors']['primary'];
+            $v['color_accent'] = $preset['colors']['accent'];
+        }
         Arr::set($s, 'brand.name', $v['brand_name']);
         Arr::set($s, 'brand.tagline', $v['tagline']);
         Arr::set($s, 'brand.cta', $v['cta']);

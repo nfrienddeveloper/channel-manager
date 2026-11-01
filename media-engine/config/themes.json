@@ -1,0 +1,32 @@
+{
+  "default": {
+    "template": "player.html",
+    "colors": {
+      "primary": "#1d3b6f",
+      "accent": "#f5b82e",
+      "dark": "#111418",
+      "light": "#f6f4ef"
+    },
+    "fonts": {
+      "heading": "Montserrat",
+      "body": "Inter"
+    }
+  },
+  "unearthed": {
+    "template": "unearthed.html",
+    "colors": {
+      "primary": "#7d5236",
+      "accent": "#c9a45c",
+      "dark": "#0e0c0a",
+      "light": "#ebe3d2"
+    },
+    "fonts": {
+      "heading": "Cormorant Garamond",
+      "body": "Hanken Grotesk",
+      "mono": "IBM Plex Mono",
+      "script": "Noto Sans Phoenician"
+    },
+    "series": "Artifact No.",
+    "intro": 0.9
+  }
+}

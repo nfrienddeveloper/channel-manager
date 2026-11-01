@@ -21,6 +21,10 @@ const sb = readJSON(sbPath);
 const adDir = path.dirname(sbPath);
 const campaignDir = findCampaignDir(adDir);
 const brand = readJSON(path.join(campaignDir, 'brand.json'));
+// Theme: brand.json may name one in config/themes.json; it picks the template and fills in colours and fonts.
+const THEMES = readJSON(path.join(ROOT, 'config', 'themes.json'));
+const theme = THEMES[brand.theme] || THEMES.default;
+if (brand.theme && !THEMES[brand.theme]) log(`unknown theme "${brand.theme}"; using the default look`);
 const ASPECTS = readJSON(path.join(ROOT, 'config', 'aspects.json'));
 const fps = Number(args.fps || sb.fps || 30);
 const preview = !!args.preview; // quick low-res check: half size, 15 fps
@@ -39,7 +43,7 @@ const fileUrl = p => (p ? pathToFileURL(path.resolve(campaignDir, p)).href : nul
 
 // 1. Voiceover, one clip per scene.
 const TRANSITION = 0.35, VO_LEAD = 0.3, VO_TAIL = 0.55;
-const MIN = { hook: 2.8, image: 3.0, stat: 3.0, quote: 3.8, split: 3.2, cta: 3.8 };
+const MIN = { hook: 2.8, image: 3.0, stat: 3.0, quote: 3.8, split: 3.2, cta: 3.8, artifact: 4.2, keyline: 3.6 };
 const voLines = sb.scenes.map((s, i) => ({ id: `s${i}`, text: s.vo, out: path.join(workDir, `vo-${i}.wav`) })).filter(l => l.text);
 let tts = { engine: 'none', durations: {}, words: {} };
 if (voLines.length && sb.voice?.engine !== 'none') {
@@ -62,8 +66,10 @@ sb.scenes.forEach((s, i) => {
   const words = (s.vo || '').replace(/\[[^\]]*\]|<[^>]*>/g, ' ').split(/\s+/).filter(Boolean);
   const vo = tts.durations[`s${i}`] ?? (words.length ? words.length / 2.7 : 0);
   const min = s.type === 'list' ? 1.6 + 0.45 * (s.items?.length || 0) + 1.2 : MIN[s.type] || 3;
-  const dur = s.duration || Math.max(min, vo ? VO_LEAD + vo + VO_TAIL : 0);
-  s._t = { start: +t.toFixed(3), end: +(t + dur).toFixed(3), voStart: +(t + VO_LEAD).toFixed(3), vo };
+  // A theme with an intro sting holds the first line of voice until the sting has played.
+  const lead = i === 0 && theme.intro ? Math.max(VO_LEAD, theme.intro) : VO_LEAD;
+  const dur = s.duration || Math.max(min, vo ? lead + vo + VO_TAIL : 0);
+  s._t = { start: +t.toFixed(3), end: +(t + dur).toFixed(3), voStart: +(t + lead).toFixed(3), vo };
   if (words.length) {
     // Exact word timings when the voice engine provides them (ElevenLabs), else spread by word length.
     const timed = tts.words[`s${i}`];
@@ -115,20 +121,22 @@ const audioFile = path.join(workDir, 'mix.m4a');
 }
 
 // 4. Frames: one HTML player per aspect, seeked frame by frame in Chromium, piped to ffmpeg.
-const template = fs.readFileSync(path.join(ROOT, 'scripts', 'templates', 'player.html'), 'utf8');
+const template = fs.readFileSync(path.join(ROOT, 'scripts', 'templates', theme.template), 'utf8');
 const scenesForPage = sb.scenes.map(s => ({ ...s, image: fileUrl(s.image) }));
 const brandForPage = {
   ...brand,
   logo: fileUrl(brand.logo),
-  colors: { primary: '#1d3b6f', accent: '#f5b82e', dark: '#111418', light: '#f6f4ef', ...brand.colors },
-  fonts: { heading: 'Montserrat', body: 'Inter', ...brand.fonts },
+  colors: { ...theme.colors, ...brand.colors },
+  fonts: { ...theme.fonts, ...brand.fonts },
+  series: brand.series ?? theme.series ?? null,
+  episode: sb.episode ?? null,
 };
 
-const fontLinks = await fontFaceCss([brandForPage.fonts.heading, brandForPage.fonts.body]);
+const fontLinks = await fontFaceCss(Object.values(brandForPage.fonts));
 
 async function openPlayer(browser, aspect, scale, captions) {
   const { width, height } = ASPECTS[aspect];
-  const data = { width, height, brand: brandForPage, scenes: scenesForPage, cues, captions, transition: TRANSITION };
+  const data = { width, height, brand: brandForPage, scenes: scenesForPage, cues, captions, transition: TRANSITION, intro: theme.intro ?? 0 };
   const html = template.replace('<!--FONTS-->', `${fontLinks}<script>window.__DATA__=${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`);
   const file = path.join(workDir, `player-${aspect}.html`);
   fs.writeFileSync(file, html);

@@ -86,6 +86,7 @@
     <div class="fields">
         <div><label>Channel name</label><input type="text" name="name" value="{{ $channel->name }}"></div>
         <div><label>Account</label><select name="platform_account_id"><option value="">None</option>@foreach ($accounts as $a)<option value="{{ $a->id }}" @selected($channel->platform_account_id === $a->id)>{{ $a->name }}</option>@endforeach</select></div>
+        <div><label>Video look</label><select name="theme">@foreach (\App\Models\Channel::THEMES as $k => $l)<option value="{{ $k }}" @selected($channel->setting('brand.theme', 'default') === $k)>{{ $l }}</option>@endforeach</select></div>
         <div><label>Brand name in videos</label><input type="text" name="brand_name" value="{{ $channel->setting('brand.name') }}"></div>
         <div><label>Tagline</label><input type="text" name="tagline" value="{{ $channel->setting('brand.tagline') }}"></div>
         <div><label>Closing call to action</label><input type="text" name="cta" value="{{ $channel->setting('brand.cta') }}"></div>

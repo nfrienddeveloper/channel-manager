@@ -1,0 +1,300 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<!--FONTS-->
+<style>
+  /* Unearthed: museum documentary. Obsidian and gold, serif headlines, catalogue labels, slow camera, film grain. */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+  body {
+    font-variant-numeric: lining-nums;
+    --u: calc(min(var(--W), var(--H)) / 100);
+    font-family: var(--body-font), 'Liberation Sans', 'DejaVu Sans', sans-serif; color: var(--light);
+    -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision;
+  }
+  #stage { position: absolute; inset: 0; overflow: hidden; background: #000; }
+  .scene { position: absolute; inset: 0; overflow: hidden; display: none; background: var(--dark); }
+  .bgimg { position: absolute; inset: -3%; width: 106%; height: 106%; object-fit: cover; will-change: transform; filter: saturate(.82) contrast(1.06) sepia(.12); }
+  .shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,12,10,.6) 0%, rgba(14,12,10,.15) 22%, rgba(14,12,10,.7) 46%, rgba(14,12,10,.97) 68%); }
+  .spot { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light; }
+  .content { position: absolute; left: calc(var(--u) * 8); right: calc(var(--u) * 8); top: var(--safeTop); bottom: var(--safeBottom); display: flex; flex-direction: column; justify-content: flex-end; }
+  .center { justify-content: center; }
+  .serif { font-family: var(--head-font), 'Liberation Serif', 'DejaVu Serif', serif; }
+  .mono { font-family: var(--mono-font), 'Liberation Mono', 'DejaVu Sans Mono', monospace; text-transform: uppercase; letter-spacing: .16em; }
+  .h { font-family: var(--head-font), 'Liberation Serif', serif; font-weight: 500; line-height: 1.0; letter-spacing: -0.01em; }
+  .h em, .q em { font-style: italic; color: var(--accent); }
+  .scene:not(.light) .h { text-shadow: 0 calc(var(--u) * .3) calc(var(--u) * 3) rgba(0,0,0,.65); }
+  .sheen { text-shadow: none; }
+  .sheen { background: linear-gradient(100deg, var(--accent) 0%, var(--accent) 40%, #fff3d4 50%, var(--accent) 60%, var(--accent) 100%); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+  .word { display: inline-block; margin-right: .2em; }
+  .mask { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .08em; }
+  .eyebrow { font-size: calc(var(--u) * 2.5); color: var(--accent); }
+  .rule { height: calc(var(--u) * .22); background: linear-gradient(90deg, var(--accent), rgba(201,164,92,0)); transform-origin: left; }
+  .sub { font-size: calc(var(--u) * 4.2); line-height: 1.35; font-weight: 500; opacity: .88; margin-top: calc(var(--u) * 3); }
+
+  /* Brand mark, top left on every scene but the end card. */
+  .mark { position: absolute; top: calc(var(--safeTopMark)); left: calc(var(--u) * 8); display: flex; align-items: center; gap: calc(var(--u) * 1.8); z-index: 20; }
+  .gem { width: calc(var(--u) * 3.2); height: calc(var(--u) * 3.2); border: calc(var(--u) * .25) solid var(--accent); transform: rotate(45deg); position: relative; flex: none; }
+  .gem::after { content: ""; position: absolute; inset: 24%; background: var(--accent); }
+  .mark span { font-family: var(--head-font), serif; font-weight: 600; font-size: calc(var(--u) * 3.6); letter-spacing: .32em; color: var(--light); text-transform: uppercase; }
+  .light .mark span { color: var(--dark); }
+  .light.topimg .mark span { color: var(--light); }
+
+  /* Placard, as on a museum wall. */
+  .placard { background: #f7f2e6; color: #1c1712; border-top: calc(var(--u) * .6) solid var(--accent); padding: calc(var(--u) * 5.5) calc(var(--u) * 6) calc(var(--u) * 5); box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 6) rgba(20,12,4,.35); }
+  .placard .mono { font-size: calc(var(--u) * 2.1); color: var(--primary); }
+  .placard .title { font-family: var(--head-font), serif; font-weight: 600; font-size: calc(var(--u) * 8.4); line-height: 1; margin: calc(var(--u) * 1.4) 0 calc(var(--u) * 3.4); }
+  .rows { display: grid; grid-template-columns: calc(var(--u) * 22) 1fr; row-gap: calc(var(--u) * 2); font-size: calc(var(--u) * 3.3); line-height: 1.25; font-weight: 600; }
+  .rows .mono { font-size: calc(var(--u) * 2.1); color: #8b7a66; padding-top: calc(var(--u) * .8); }
+  .ref { margin-top: calc(var(--u) * 3.6); padding-top: calc(var(--u) * 2.6); border-top: 1.5px solid #d8ccb4; display: flex; justify-content: space-between; align-items: baseline; gap: calc(var(--u) * 3); }
+  .ref .serif { font-weight: 600; font-size: calc(var(--u) * 4.4); color: var(--primary); text-align: right; }
+
+  .light { background: var(--light) !important; color: #1c1712; }
+  .light .tex { position: absolute; inset: 0; background: radial-gradient(80% 60% at 30% 20%, rgba(255,255,255,.55), transparent 60%), radial-gradient(100% 70% at 80% 100%, rgba(125,82,54,.2), transparent 60%); }
+
+  .stat-num { font-family: var(--head-font), serif; font-weight: 500; line-height: .9; letter-spacing: -0.03em; font-size: calc(var(--u) * 34); color: var(--accent); }
+  .stat-label { font-family: var(--head-font), serif; font-size: calc(var(--u) * 6.4); font-weight: 500; line-height: 1.15; margin-top: calc(var(--u) * 3); }
+  .q { font-family: var(--head-font), serif; font-style: italic; font-weight: 500; font-size: calc(var(--u) * 7.6); line-height: 1.16; }
+  .qmark { font-family: var(--head-font), serif; font-size: calc(var(--u) * 30); line-height: .6; height: calc(var(--u) * 13); color: var(--accent); }
+  .item { display: flex; align-items: baseline; gap: calc(var(--u) * 3.2); font-family: var(--head-font), serif; font-size: calc(var(--u) * 6.2); font-weight: 500; line-height: 1.2; padding: calc(var(--u) * 2.4) 0; border-bottom: 1px solid rgba(201,164,92,.28); }
+  .item .gem { width: calc(var(--u) * 2.2); height: calc(var(--u) * 2.2); border-width: calc(var(--u) * .2); transform: rotate(45deg) translateY(calc(var(--u) * -.6)); }
+  .glyphs { font-family: var(--script-font), var(--head-font), serif; font-size: calc(var(--u) * 12); letter-spacing: .08em; line-height: 1.1; color: var(--light); text-shadow: 0 0 calc(var(--u) * 4) rgba(201,164,92,.35); }
+  .translit { font-size: calc(var(--u) * 3.2); color: var(--light); opacity: .8; margin-top: calc(var(--u) * 2.4); }
+  .trans { font-family: var(--head-font), serif; font-style: italic; font-weight: 500; font-size: calc(var(--u) * 9.5); line-height: 1.05; color: var(--accent); margin-top: calc(var(--u) * 3.6); }
+  .frame { position: absolute; inset: calc(var(--u) * 4); border: 1px solid rgba(201,164,92,.35); pointer-events: none; }
+
+  /* End card */
+  .wordmark { font-family: var(--head-font), serif; font-weight: 600; font-size: calc(var(--u) * 10); letter-spacing: .3em; margin-left: .3em; text-transform: uppercase; text-align: center; line-height: 1.1; }
+  .tagline { font-family: var(--head-font), serif; font-style: italic; font-size: calc(var(--u) * 4.8); color: var(--light); opacity: .85; text-align: center; }
+  .bigem { width: calc(var(--u) * 8.5); height: calc(var(--u) * 8.5); border-width: calc(var(--u) * .4); align-self: center; }
+  .next { border: 1.5px solid rgba(201,164,92,.5); padding: calc(var(--u) * 4) calc(var(--u) * 4.5); display: flex; justify-content: space-between; align-items: center; gap: calc(var(--u) * 3); }
+  .next .serif { font-size: calc(var(--u) * 5.4); font-weight: 600; margin-top: calc(var(--u) * 1); line-height: 1.1; }
+  .follow { flex: none; font-weight: 700; font-size: calc(var(--u) * 3); background: var(--accent); color: var(--dark); padding: calc(var(--u) * 2) calc(var(--u) * 3.4); letter-spacing: .1em; text-transform: uppercase; }
+
+  /* Intro sting: gold line draws, the mark turns in, the series number types on. */
+  #sting { position: absolute; inset: 0; z-index: 40; background: var(--dark); display: none; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * 4.5); }
+  #sting .gem { width: calc(var(--u) * 9); height: calc(var(--u) * 9); border-width: calc(var(--u) * .45); }
+  #sting .line { width: calc(var(--u) * 46); height: calc(var(--u) * .25); background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+  #sting .mono { font-size: calc(var(--u) * 2.8); color: var(--accent); min-height: 1.2em; }
+
+  #grain { position: absolute; inset: -50%; z-index: 35; pointer-events: none; opacity: .13; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='4'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"); }
+  #vignette { position: absolute; inset: 0; z-index: 34; pointer-events: none; background: radial-gradient(120% 85% at 50% 45%, transparent 55%, rgba(0,0,0,.55) 100%); }
+
+  #captions { position: absolute; left: calc(var(--u) * 7); right: calc(var(--u) * 7); top: var(--capTop); z-index: 30; text-align: center; pointer-events: none; }
+  #captions .cap { font-family: var(--body-font), sans-serif; font-weight: 700; font-size: calc(var(--u) * 5.4); line-height: 1.3; color: #fff;
+    text-shadow: 0 calc(var(--u) * .4) calc(var(--u) * 2.4) rgba(0,0,0,.9), 0 0 calc(var(--u) * .5) rgba(0,0,0,.9); }
+  #captions b { color: var(--accent); font-weight: 700; }
+  #captions.on-light .cap { color: #1c1712; text-shadow: 0 0 calc(var(--u) * 2) rgba(247,242,230,.9); }
+  #captions.on-light b { color: var(--primary); }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="vignette"></div>
+<div id="grain"></div>
+<div id="captions"></div>
+<div id="sting"><div class="gem"></div><div class="line"></div><div class="mono"></div></div>
+<script>
+const D = window.__DATA__;
+const $ = (h) => { const t = document.createElement('template'); t.innerHTML = h.trim(); return t.content.firstChild; };
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+// *words* in a headline are the payoff: italic gold.
+const rich = s => esc(s).replace(/\*([^*]+)\*/g, '<em>$1</em>').replace(/\*/g, '');
+const plain = s => String(s ?? '').replace(/\*/g, '');
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const easeOut = x => 1 - Math.pow(1 - x, 3);
+const easeInOut = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+
+const b = D.brand, C = b.colors, F = b.fonts;
+const root = document.body.style;
+root.setProperty('--W', D.width + 'px'); root.setProperty('--H', D.height + 'px');
+root.setProperty('--primary', C.primary); root.setProperty('--accent', C.accent);
+root.setProperty('--dark', C.dark); root.setProperty('--light', C.light);
+root.setProperty('--head-font', `'${F.heading}'`); root.setProperty('--body-font', `'${F.body}'`);
+root.setProperty('--mono-font', `'${F.mono || 'IBM Plex Mono'}'`); root.setProperty('--script-font', `'${F.script || F.heading}'`);
+const tall = D.height / D.width > 1.5, portrait = D.height > D.width;
+const u = Math.min(D.width, D.height) / 100;
+root.setProperty('--safeTop', (tall ? D.height * .15 : u * 16) + 'px');
+root.setProperty('--safeTopMark', (tall ? D.height * .065 : u * 6) + 'px');
+root.setProperty('--safeBottom', (tall ? D.height * .36 : portrait ? D.height * .22 : D.height * .2) + 'px');
+const capTop = tall ? D.height * .7 : D.height * .82;
+root.setProperty('--capTop', capTop + 'px');
+root.setProperty('--capClear', (D.height - capTop + u * 3) + 'px'); // keeps placards above the captions
+
+const episode = D.brand.episode != null && b.series ? `${b.series} ${String(D.brand.episode).padStart(3, '0')}` : null;
+const mark = `<div class="mark" data-a="fade" data-d=".1"><div class="gem"></div><span>${esc(b.name)}</span></div>`;
+// Headline words rise out of a mask one after another.
+const words = (s, d0 = .2, step = .08) => {
+  const out = []; let i = 0;
+  for (const part of rich(s).split(/(<em>.*?<\/em>)/)) {
+    const em = part.startsWith('<em>');
+    for (const w of part.replace(/<\/?em>/g, '').split(/\s+/).filter(Boolean)) {
+      const inner = em ? `<em class="sheen">${w}</em>` : w;
+      out.push(`<span class="mask word"><span style="display:inline-block" data-a="rise" data-d="${(d0 + i++ * step).toFixed(2)}">${inner}</span></span>`);
+    }
+  }
+  return out.join('');
+};
+const eyebrow = (text, d = .1) => text ? `<div class="mono eyebrow" data-a="fade" data-d="${d}">${esc(text)}</div><div class="rule" style="width:calc(var(--u) * 38);margin:calc(var(--u) * 2.4) 0 calc(var(--u) * 3.6)" data-a="wipe" data-d="${d + .1}"></div>` : '';
+const big = n => `font-size:calc(var(--u) * ${n})`;
+
+function build(s, i) {
+  const img = s.image ? `<img class="bgimg" src="${s.image}" style="object-position:${s.focus || 'center 35%'}" data-kb="${i % 2 ? -1 : 1}">` : '';
+  const spot = `<div class="spot" data-spot="1"></div>`;
+  const first = i === 0;
+  const d0 = first ? 0 : 0; // the sting covers the first scene's opening; its timing is shifted in __seek
+  switch (s.type) {
+    case 'hook': return `<div class="scene">${img}${img ? '<div class="shade"></div>' : ''}${spot}${mark}
+      <div class="content">${eyebrow(s.kicker || (first ? episode : null), d0 + .1)}
+      <div class="h" style="${big(s.size || 11)}">${words(s.text, d0 + .25)}</div>${s.sub ? `<div class="sub" data-a="rise" data-d=".9">${esc(s.sub)}</div>` : ''}</div></div>`;
+    case 'image': return `<div class="scene">${img}<div class="shade"></div>${spot}${mark}
+      <div class="content">${eyebrow(s.kicker, .15)}<div class="h" style="${big(s.size || 8)}">${words(s.text, .3, .06)}</div>
+      ${s.sub ? `<div class="sub" data-a="rise" data-d=".8">${esc(s.sub)}</div>` : ''}</div></div>`;
+    case 'split': return `<div class="scene">
+      <div style="position:absolute;left:0;right:0;top:0;height:${tall ? 52 : 50}%;overflow:hidden">${img}<div class="shade" style="background:linear-gradient(180deg,rgba(14,12,10,.5),transparent 40%,rgba(14,12,10,.2))"></div></div>
+      <div class="light" style="position:absolute;left:0;right:0;bottom:0;top:${tall ? 52 : 50}%"><div class="tex"></div>
+        <div style="position:absolute;left:calc(var(--u) * 8);right:calc(var(--u) * 8);top:calc(var(--u) * 7)">
+        ${s.kicker ? `<div class="mono" style="font-size:calc(var(--u) * 2.4);color:var(--primary)" data-a="fade" data-d=".15">${esc(s.kicker)}</div>` : ''}
+        <div class="h" style="${big(s.size || 8.4)};margin-top:calc(var(--u) * 2.4)">${words(s.text, .25, .06)}</div>
+        ${s.sub ? `<div class="sub" style="color:#3a2f25" data-a="rise" data-d=".8">${esc(s.sub)}</div>` : ''}</div></div>${mark}</div>`;
+    case 'stat': return `<div class="scene">${img ? img + '<div class="shade" style="background:rgba(14,12,10,.82)"></div>' : ''}${spot}${mark}
+      <div class="content center">${eyebrow(s.kicker, .05)}
+      <div class="stat-num" data-count="${esc(s.value)}" data-a="fade" data-d=".1">${esc(s.value)}</div>
+      <div class="rule" style="width:100%;margin-top:calc(var(--u) * 3)" data-a="wipe" data-d=".5"></div>
+      <div class="stat-label" data-a="rise" data-d=".6">${rich(s.label)}</div></div></div>`;
+    case 'quote': return `<div class="scene light" data-light="1"><div class="tex"></div>${mark}
+      <div class="content center"><div class="qmark" data-a="fade" data-d=".05">&ldquo;</div>
+      <div class="q" data-a="rise" data-d=".2">${rich(s.text)}</div>
+      ${s.author ? `<div class="mono" style="font-size:calc(var(--u) * 2.6);color:var(--primary);margin-top:calc(var(--u) * 5)" data-a="fade" data-d=".8">${esc(s.author)}</div>` : ''}</div></div>`;
+    case 'list': return `<div class="scene">${img ? img + '<div class="shade" style="background:rgba(14,12,10,.8)"></div>' : ''}${spot}${mark}
+      <div class="content center">${eyebrow(s.kicker, .05)}<div class="h" style="${big(s.size || 8.4)};margin-bottom:calc(var(--u) * 3)">${words(s.title, .15, .06)}</div>
+      ${(s.items || []).map((t, k) => `<div class="item" data-a="rise" data-d="${(.6 + k * .45).toFixed(2)}"><span class="gem"></span><span>${esc(t)}</span></div>`).join('')}</div></div>`;
+    case 'artifact': {
+      const rows = (s.rows || []).map(r => `<div class="mono">${esc(r.label)}</div><div>${esc(r.value)}</div>`).join('');
+      return `<div class="scene light${img ? ' topimg' : ''}" data-light="1"><div class="tex"></div>
+      ${img ? `<div style="position:absolute;left:0;right:0;top:0;height:${tall ? 40 : 42}%;overflow:hidden">${img}<div class="shade" style="background:linear-gradient(180deg,rgba(14,12,10,.45),transparent 35%,transparent 70%,rgba(235,227,210,1))"></div></div>` : ''}${mark}
+      <div class="content" style="justify-content:${img ? 'flex-end' : 'center'};bottom:var(--capClear)"><div class="placard" data-a="placard" data-d=".15">
+        <div class="mono">${esc(s.kicker || episode || 'Artifact')}</div><div class="title">${esc(plain(s.title || s.text))}</div>
+        ${rows ? `<div class="rows">${rows}</div>` : ''}
+        ${s.ref ? `<div class="ref"><div class="mono" style="color:#8b7a66">Read alongside</div><div class="serif">${esc(s.ref)}</div></div>` : ''}
+      </div></div></div>`;
+    }
+    case 'keyline': return `<div class="scene">${img ? img + '<div class="shade" style="background:rgba(14,12,10,.86)"></div>' : ''}${spot}${mark}<div class="frame"></div>
+      <div class="content center" style="align-items:center;text-align:center">
+      <div class="mono eyebrow" data-a="fade" data-d=".05">${esc(s.kicker || 'The key line')}</div>
+      ${s.script ? `<div class="glyphs" style="margin-top:calc(var(--u) * 4)" data-a="etch" data-d=".2">${esc(s.script)}</div>` : ''}
+      ${s.translit ? `<div class="mono translit" data-a="fade" data-d=".7">${esc(s.translit)}</div>` : ''}
+      <div class="trans" data-a="rise" data-d="${s.script ? 1.0 : .3}">${esc(plain(s.text))}</div>
+      ${s.sub ? `<div class="sub" data-a="rise" data-d="1.3">${esc(s.sub)}</div>` : ''}</div></div>`;
+    case 'cta': {
+      const nextEp = D.brand.episode != null && b.series ? `Next · ${b.series} ${String(D.brand.episode + 1).padStart(3, '0')}` : 'Next';
+      return `<div class="scene"><div class="spot" data-spot="1" style="mix-blend-mode:normal"></div>
+      <div class="content center" style="gap:calc(var(--u) * 4.5);bottom:calc(var(--safeBottom) * .7)">
+        <div class="gem bigem" data-a="turn" data-d=".05"></div>
+        <div class="wordmark" data-a="track" data-d=".2">${esc(b.name)}</div>
+        <div class="rule" style="width:calc(var(--u) * 46);align-self:center;background:linear-gradient(90deg,transparent,var(--accent),transparent);transform-origin:center" data-a="wipe" data-d=".5"></div>
+        ${b.tagline ? `<div class="tagline" data-a="fade" data-d=".7">${esc(b.tagline)}</div>` : ''}
+        <div class="next" style="margin-top:calc(var(--u) * 5)" data-a="rise" data-d="1.0">
+          <div><div class="mono" style="font-size:calc(var(--u) * 2.2);color:var(--accent)">${esc(nextEp)}</div><div class="serif">${esc(plain(s.next || s.text || 'Another find tomorrow'))}</div></div>
+          <div class="follow" data-pulse="1">${esc(s.button || 'Follow')}</div>
+        </div></div></div>`;
+    }
+    default: throw new Error('Unknown scene type ' + s.type);
+  }
+}
+
+const stage = document.getElementById('stage');
+const scenes = D.scenes.map((s, i) => {
+  const el = $(build(s, i)); stage.appendChild(el);
+  return { s, i, el, light: !!el.dataset.light, anims: [...el.querySelectorAll('[data-a]')], kb: el.querySelector('.bgimg'), spot: el.querySelector('[data-spot]'),
+    count: el.querySelector('[data-count]'), pulse: el.querySelector('[data-pulse]'), sheens: [...el.querySelectorAll('.sheen')] };
+});
+const INTRO = D.intro ?? 0.9; // seconds the sting holds the first scene
+const DIP = 0.22; // each cut dips briefly through black
+
+function animate(el, kind, p) {
+  const e = easeOut(p), st = el.style;
+  st.opacity = e;
+  switch (kind) {
+    case 'rise': st.transform = `translateY(${(1 - e) * 105}%)`; st.opacity = 1; if (!el.parentElement.classList.contains('mask')) { st.transform = `translateY(${(1 - e) * 0.7}em)`; st.opacity = e; } break;
+    case 'wipe': st.transform = `scaleX(${e})`; break;
+    case 'placard': st.transform = `translateY(${(1 - e) * 18}%)`; break;
+    case 'turn': st.transform = `rotate(${45 + (1 - e) * -135}deg) scale(${.6 + .4 * e})`; break;
+    case 'track': st.letterSpacing = `${(0.3 + (1 - e) * 0.25).toFixed(3)}em`; break;
+    case 'etch': st.filter = `blur(${((1 - e) * 1.2).toFixed(2)}vmin)`; st.clipPath = `inset(0 ${((1 - e) * 100).toFixed(1)}% 0 0)`; st.opacity = 1; break;
+    default: break;
+  }
+}
+
+function countText(target, p) {
+  const m = String(target).match(/^(\D*)([\d,]+(?:\.\d+)?)(.*)$/);
+  if (!m) return target;
+  const n = parseFloat(m[2].replace(/,/g, '')), dec = (m[2].split('.')[1] || '').length;
+  const v = n * easeOut(p);
+  const s = dec ? v.toFixed(dec) : Math.round(v).toLocaleString('en-US');
+  return m[1] + (m[2].includes(',') ? s : s.replace(/,/g, '')) + m[3];
+}
+
+const sting = document.getElementById('sting'), stingGem = sting.querySelector('.gem'), stingLine = sting.querySelector('.line'), stingText = sting.querySelector('.mono');
+const stingLabel = episode || b.name;
+const grain = document.getElementById('grain');
+const capEl = document.getElementById('captions');
+
+window.__seek = (t) => {
+  // Grain moves at 12 fps, like film.
+  const gf = Math.floor(t * 12);
+  grain.style.transform = `translate(${((gf * 37) % 100) / 10 - 5}%, ${((gf * 61) % 100) / 10 - 5}%)`;
+
+  // Intro sting over the first scene.
+  if (t < INTRO + .35) {
+    sting.style.display = 'flex';
+    sting.style.opacity = 1 - clamp((t - INTRO) / .35);
+    stingLine.style.transform = `scaleX(${easeInOut(clamp(t / .5))})`;
+    stingGem.style.transform = `rotate(${45 + (1 - easeOut(clamp((t - .05) / .5))) * -180}deg) scale(${.5 + .5 * easeOut(clamp(t / .45))})`;
+    stingText.textContent = stingLabel.slice(0, Math.round(stingLabel.length * clamp((t - .3) / .45)));
+  } else sting.style.display = 'none';
+
+  let light = false;
+  for (const sc of scenes) {
+    const { start, end } = sc.s._t;
+    const last = sc === scenes.at(-1);
+    const visible = t >= start && t < end + (last ? 1 : 0);
+    sc.el.style.display = visible ? 'block' : 'none';
+    if (!visible) continue;
+    if (sc.light) light = true;
+    const fadeIn = start === 0 ? 1 : clamp((t - start) / DIP), fadeOut = last ? 1 : clamp((end - t) / DIP);
+    sc.el.style.opacity = Math.min(fadeIn, fadeOut);
+    // Animations in the first scene wait for the sting.
+    const lt = t - start - (sc.i === 0 ? INTRO * .85 : 0);
+    for (const a of sc.anims) animate(a, a.dataset.a, clamp((lt - parseFloat(a.dataset.d || 0)) / 0.7));
+    const p = clamp((t - start) / Math.max(1, end - start));
+    if (sc.kb) { const dir = +sc.kb.dataset.kb; sc.kb.style.transform = `scale(${1.05 + 0.08 * p}) translate(${dir * (p - .5) * 1.6}%, ${(p - .5) * -1}%)`; }
+    if (sc.spot) sc.spot.style.background = `radial-gradient(${sc.light ? 0 : 55}% 38% at ${30 + 40 * p}% ${30 + 10 * p}%, rgba(255,226,170,.38), transparent 70%)`;
+    for (const sh of sc.sheens) sh.style.backgroundPosition = `${(100 - clamp((lt - 1.0) / 1.2) * 100).toFixed(1)}% 0`;
+    if (sc.count) sc.count.textContent = countText(sc.count.dataset.count, clamp((lt - 0.1) / 1.4));
+    if (sc.pulse && lt > 1.8) sc.pulse.style.transform = `scale(${1 + 0.04 * Math.sin((lt - 1.8) * 5)})`;
+  }
+  capEl.classList.toggle('on-light', light);
+
+  // Captions: phrase groups, current word in gold. No box.
+  let html = '';
+  if (D.captions) for (const c of D.cues) {
+    if (t < c.start || t >= c.end) continue;
+    const g = c.groups.find(g => t >= g.start && t < g.end) || null;
+    if (!g) break;
+    html = '<span class="cap">' + g.words.map(w => t >= w.start && t < w.end ? `<b>${esc(w.text)}</b>` : esc(w.text)).join(' ') + '</span>';
+    break;
+  }
+  if (capEl.innerHTML !== html) capEl.innerHTML = html;
+};
+window.__ready = (async () => {
+  await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 8000))]);
+  await Promise.all([...document.images].map(img => img.complete ? 0 : new Promise(r => { img.onload = img.onerror = r; })));
+  window.__seek(0);
+  return true;
+})();
+</script>
+</body>
+</html>

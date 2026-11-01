@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ContentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,6 +21,12 @@ class Channel extends Model
 
     public const STRATEGIES = [
         'trending' => 'Trending topics',
+    ];
+
+    /** Video looks. Each one is a template in media-engine/config/themes.json. */
+    public const THEMES = [
+        'default' => 'Classic',
+        'unearthed' => 'Unearthed (museum documentary)',
     ];
 
     protected $fillable = ['name', 'platform', 'strategy', 'active', 'live', 'platform_account_id', 'settings', 'last_tick_at'];
@@ -53,6 +60,7 @@ class Channel extends Model
             'hashtags' => ['TrendingNow'],
             'voice' => ['engine' => 'auto', 'voice' => 'Adam', 'fallback' => 'am_michael'],
             'brand' => [
+                'theme' => 'default',
                 'name' => 'Trend Brief',
                 'tagline' => 'What everyone is talking about, in 30 seconds.',
                 'colors' => ['primary' => '#1b2a4a', 'accent' => '#ff5a36', 'dark' => '#0e1424', 'light' => '#f7f5f0'],
@@ -60,6 +68,32 @@ class Channel extends Model
                 'cta' => 'Follow for the daily trends',
             ],
         ];
+    }
+
+    /**
+     * Brand values a theme starts with: its colours, fonts and words. Switching a channel to a theme applies these;
+     * the name stays the channel's own unless it is still the default.
+     */
+    public static function themePreset(string $theme): array
+    {
+        return match ($theme) {
+            'unearthed' => [
+                'theme' => 'unearthed',
+                'tagline' => 'History, dug up. Scripture, examined.',
+                'cta' => 'A new find, every day',
+                'series' => 'Artifact No.',
+                'colors' => ['primary' => '#7d5236', 'accent' => '#c9a45c', 'dark' => '#0e0c0a', 'light' => '#ebe3d2'],
+                'fonts' => ['heading' => 'Cormorant Garamond', 'body' => 'Hanken Grotesk', 'mono' => 'IBM Plex Mono', 'script' => 'Noto Sans Phoenician'],
+            ],
+            default => ['theme' => 'default', 'series' => null] + Arr::only(self::defaultSettings()['brand'], ['colors', 'fonts']),
+        };
+    }
+
+    /** The episode number shown on screen for themes that number their videos: earlier items, less the ones dropped. */
+    public function nextEpisode(ContentItem $item): int
+    {
+        return $this->items()->where('id', '<', $item->id)
+            ->whereNotIn('status', [ContentStatus::Skipped, ContentStatus::Failed])->count() + 1;
     }
 
     public function setting(string $key, mixed $default = null): mixed

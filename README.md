@@ -53,6 +53,7 @@ php artisan trends:collect                  # see what is trending and how it ra
 php artisan channels:create "Trend Brief" --active
 php artisan channels:make-now 1             # make one video right now (add --publish to post or save to the outbox)
 php artisan channels:tick                   # one autopilot pass (the scheduler runs this every 5 minutes)
+php artisan channels:redo 1 --dry-run         # remake unpublished videos in the current look; --repost=5 also remakes the 5 most-viewed as new posts
 ```
 
 ## Settings worth knowing
