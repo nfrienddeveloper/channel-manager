@@ -95,6 +95,31 @@ class Autopilot
         return $slots->sort()->values();
     }
 
+    /** Free post times from $from onward, at most $perDay a day: no open or published item holds them. */
+    public function freeSlots(Channel $channel, Carbon $from, int $count, int $perDay = 1): Collection
+    {
+        $tz = $channel->setting('timezone', config('channels.timezone'));
+        $times = array_slice($channel->setting('post_times', []), 0, max(0, (int) $channel->setting('posts_per_day', 3)));
+        $taken = $channel->items()->where('scheduled_for', '>=', $from)->get()
+            ->filter(fn (ContentItem $i) => $i->status->isOpen() || $i->status === ContentStatus::Published)
+            ->map(fn (ContentItem $i) => $i->scheduled_for->utc()->toDateTimeString())->all();
+        $slots = collect();
+        for ($dayOffset = 0; $slots->count() < $count && $times && $dayOffset < 366; $dayOffset++) {
+            $day = $from->copy()->setTimezone($tz)->startOfDay()->addDays($dayOffset);
+            $today = 0;
+            foreach ($times as $time) {
+                [$h, $m] = array_map('intval', explode(':', $time) + [1 => 0]);
+                $slot = $day->copy()->setTime($h, $m)->utc();
+                if ($slot->gt($from) && ! in_array($slot->toDateTimeString(), $taken, true) && $today < $perDay && $slots->count() < $count) {
+                    $slots->push($slot);
+                    $today++;
+                }
+            }
+        }
+
+        return $slots;
+    }
+
     private function planSlots(Channel $channel): int
     {
         $planned = 0;

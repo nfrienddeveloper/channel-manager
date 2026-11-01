@@ -54,7 +54,7 @@ class UnearthedThemeTest extends TestCase
         $this->assertSame('A stone that names *King David*', $sb['scenes'][0]['text']);
         $this->assertSame([['label' => 'Date', 'value' => 'c. 840 BC'], ['label' => 'Found', 'value' => '1993, Tel Dan']], $sb['scenes'][2]['rows']);
         $this->assertSame('assets/stele.jpg', $sb['scenes'][2]['image']);
-        $this->assertSame(2, $sb['episode'], 'only videos actually made count toward the number');
+        $this->assertSame(2, $sb['episode'], 'skipped items do not count toward the number');
         $this->assertSame('A new find, every day', $sb['scenes'][4]['text']);
     }
 

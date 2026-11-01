@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ContentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -88,10 +89,11 @@ class Channel extends Model
         };
     }
 
-    /** The episode number shown on screen for themes that number their videos, counting the ones already made. */
+    /** The episode number shown on screen for themes that number their videos: earlier items, less the ones dropped. */
     public function nextEpisode(ContentItem $item): int
     {
-        return $this->items()->where('id', '<', $item->id)->whereNotNull('video_path')->count() + 1;
+        return $this->items()->where('id', '<', $item->id)
+            ->whereNotIn('status', [ContentStatus::Skipped, ContentStatus::Failed])->count() + 1;
     }
 
     public function setting(string $key, mixed $default = null): mixed
